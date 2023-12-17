@@ -1,0 +1,11 @@
+Use of literal control characters in variable names is deprecated at /home/c/cjhughes255/CIS520/project3/pintos3/src/utils/pintos line 909.
+Prototype mismatch: sub main::SIGVTALRM () vs none at /home/c/cjhughes255/CIS520/project3/pintos3/src/utils/pintos line 933.
+Constant subroutine SIGVTALRM redefined at /home/c/cjhughes255/CIS520/project3/pintos3/src/utils/pintos line 925.
+00000000000i[     ] reading configuration from bochsrc.txt
+00000000000e[     ] user_shortcut: old-style syntax detected
+00000000000i[     ] installing nogui module as the Bochs GUI
+00000000000i[     ] using log file bochsout.txt
+========================================================================
+Bochs is exiting with the following message:
+[UNMP ] Shutdown port: shutdown requested
+========================================================================
