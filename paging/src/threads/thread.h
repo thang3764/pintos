@@ -2,8 +2,10 @@
 #define THREADS_THREAD_H
 
 #include <debug.h>
+#include <hash.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -23,9 +25,6 @@ typedef int tid_t;
 #define PRI_MIN 0                       /* Lowest priority. */
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
-#define NICE_DEFAULT 0
-#define RECENT_CPU_DEFAULT 0
-#define LOAD_AVERAGE_DEFAULT 0
 
 /* A kernel thread or user process.
 
@@ -90,23 +89,50 @@ struct thread
     enum thread_status status;          /* Thread state. */
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
-    int priority;                         /* Priority. */
-    int nice ;                           /* Nice Value of thread*/
-    int recent_cpu;                      /* Recent CPU usage time*/
-    int64_t sleep_time;                           /*  Sleep time*/ 
-    int64_t start_sleep_time;
+    int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
+
+    /* Owned by process.c. */
+    int exit_code;                      /* Exit code. */
+    struct wait_status *wait_status;    /* This process's completion status. */
+    struct list children;               /* Completion status of children. */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
-#ifdef USERPROG
+    /* Alarm clock. */
+    int64_t wakeup_time;                /* Time to wake this thread up. */
+    struct list_elem timer_elem;        /* Element in timer_wait_list. */
+    struct semaphore timer_sema;        /* Semaphore. */
+
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-#endif
+    struct hash *pages;                 /* Page table. */
+    struct file *bin_file;              /* The binary executable. */
+
+    /* Owned by syscall.c. */
+    struct list fds;                    /* List of file descriptors. */
+    struct list mappings;               /* Memory-mapped files. */
+    int next_handle;                    /* Next handle value. */
+    void *user_esp;                     /* User's stack pointer. */
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+  };
+
+/* Tracks the completion of a process.
+   Reference held by both the parent, in its `children' list,
+   and by the child, in its `wait_status' pointer. */
+struct wait_status
+  {
+    struct list_elem elem;              /* `children' list element. */
+    struct lock lock;                   /* Protects ref_cnt. */
+    int ref_cnt;                        /* 2=child and parent both alive,
+                                           1=either child or parent alive,
+                                           0=child and parent both dead. */
+    tid_t tid;                          /* Child thread id. */
+    int exit_code;                      /* Child exit code, if dead. */
+    struct semaphore dead;              /* 1=child alive, 0=child dead. */
   };
 
 /* If false (default), use round-robin scheduler.
@@ -146,30 +172,3 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 #endif /* threads/thread.h */
-
-/*Compare two threads's list (non-empty) by priority */
-bool priority_compare(struct list_elem* le1, struct list_elem* le2, void *aux);
-
-/*Process fixed-point */
-int round_to_nearest (int num);
-int float_add_int(int x, int n);
-int float_sub_int(int x, int n);
-int float_mul_int(int x, int n);
-int float_div_int(int x, int n);
-int float_add_float(int x, int y);
-int float_sub_float(int x, int y);
-int float_mul_float(int x, int y);
-int float_div_float(int x, int y);
-
-/* Calculate methods*/
-int calculate_priority( struct thread* t);
-int calculate_recent_cpu(struct thread* t);
-int calculate_load_avg(struct thread* t, int ready_threads);
-void increase_recent_cpu(int num);
-
-/*Update values , load_avg priority*/
-void update_recent_cpu(void);
-
-void update_load_avg(void);
-
-void update_priority(void);

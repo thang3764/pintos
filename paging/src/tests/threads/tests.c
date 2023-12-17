@@ -13,6 +13,7 @@ static const struct test tests[] =
   {
     {"alarm-single", test_alarm_single},
     {"alarm-multiple", test_alarm_multiple},
+    {"alarm-many", test_alarm_many},
     {"alarm-simultaneous", test_alarm_simultaneous},
     {"alarm-priority", test_alarm_priority},
     {"alarm-zero", test_alarm_zero},
@@ -84,7 +85,6 @@ fail (const char *format, ...)
 {
   va_list args;
   
-  printf("Error %s:",format);
   printf ("(%s) FAIL: ", test_name);
   va_start (args, format);
   vprintf (format, args);
